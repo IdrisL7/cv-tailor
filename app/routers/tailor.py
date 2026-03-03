@@ -153,7 +153,12 @@ def _build_docx_from_sections(
 
         lines = tailored_sections.get(section.heading, section.content_lines)
         for line in lines:
-            p = doc.add_paragraph(line, style="List Bullet")
+            # Only use bullet style for lines that look like bullet points
+            is_bullet = line.lstrip().startswith(("•", "-", "–", "▪", "●", "○", "■"))
+            style = "List Bullet" if is_bullet else "Normal"
+            if is_bullet:
+                line = line.lstrip("•-–▪●○■ ")
+            p = doc.add_paragraph(line, style=style)
             for run in p.runs:
                 run.font.size = Pt(11)
 
