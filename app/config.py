@@ -1,11 +1,21 @@
 import os
+import tempfile
 from pathlib import Path
-from dotenv import load_dotenv
+
+try:
+    from dotenv import load_dotenv
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    load_dotenv(BASE_DIR / ".env")
+except ImportError:
+    pass
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
 
-OUTPUT_DIR = BASE_DIR / "output"
+# Use /tmp on serverless (Vercel), local output/ dir otherwise
+if os.environ.get("VERCEL"):
+    OUTPUT_DIR = Path(tempfile.gettempdir()) / "cv-tailor-output"
+else:
+    OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "")
