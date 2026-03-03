@@ -20,6 +20,7 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "")
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
+CLAUDE_MODEL_FAST = "claude-haiku-4-5-20251001"
 MAX_TOKENS = 4096
 
 REQUEST_TIMEOUT = 15

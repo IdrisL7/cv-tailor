@@ -16,8 +16,7 @@ from app.services.docx_handler import (
 )
 from app.services.ai_engine import (
     extract_keywords,
-    tailor_cv_sections,
-    generate_prep_summary,
+    run_pipeline,
 )
 
 # PDF support is optional (PyMuPDF may not be available on all platforms)
@@ -78,10 +77,9 @@ async def tailor_cv(
             sections = extract_sections_from_pdf(input_path)
             doc = None
 
-        # 3. AI pipeline
-        job_keywords = extract_keywords(jd_text)
-        tailored_sections = tailor_cv_sections(sections, job_keywords)
-        prep_summary = generate_prep_summary(job_keywords, sections)
+        # 3. AI pipeline (keyword extraction first, then tailor + prep in parallel)
+        job_keywords = await extract_keywords(jd_text)
+        tailored_sections, prep_summary = await run_pipeline(sections, job_keywords)
 
         # 4. Generate output file
         if is_docx and doc:

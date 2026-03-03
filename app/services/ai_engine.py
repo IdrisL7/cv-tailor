@@ -1,12 +1,13 @@
 import anthropic
+import asyncio
 import json
 import re
-from app.config import CLAUDE_API_KEY, CLAUDE_MODEL, MAX_TOKENS
+from app.config import CLAUDE_API_KEY, CLAUDE_MODEL, CLAUDE_MODEL_FAST, MAX_TOKENS
 from app.services.docx_handler import CVSection
 
 
-def _get_client() -> anthropic.Anthropic:
-    return anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+def _get_async_client() -> anthropic.AsyncAnthropic:
+    return anthropic.AsyncAnthropic(api_key=CLAUDE_API_KEY)
 
 
 def _strip_json_fences(text: str) -> str:
@@ -20,10 +21,10 @@ def _strip_json_fences(text: str) -> str:
     return text.strip()
 
 
-def extract_keywords(job_description: str) -> dict:
-    client = _get_client()
-    response = client.messages.create(
-        model=CLAUDE_MODEL,
+async def extract_keywords(job_description: str) -> dict:
+    client = _get_async_client()
+    response = await client.messages.create(
+        model=CLAUDE_MODEL_FAST,
         max_tokens=MAX_TOKENS,
         messages=[
             {
@@ -50,10 +51,10 @@ JOB DESCRIPTION:
     return json.loads(_strip_json_fences(response.content[0].text))
 
 
-def tailor_cv_sections(
+async def tailor_cv_sections(
     sections: list[CVSection], job_keywords: dict
 ) -> dict[str, list[str]]:
-    client = _get_client()
+    client = _get_async_client()
 
     sections_data = {}
     for s in sections:
@@ -61,7 +62,7 @@ def tailor_cv_sections(
             continue
         sections_data[s.heading] = s.content_lines
 
-    response = client.messages.create(
+    response = await client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=MAX_TOKENS,
         messages=[
@@ -119,8 +120,8 @@ def _validate_no_fabrication(
     return validated
 
 
-def generate_prep_summary(job_keywords: dict, sections: list[CVSection]) -> str:
-    client = _get_client()
+async def generate_prep_summary(job_keywords: dict, sections: list[CVSection]) -> str:
+    client = _get_async_client()
 
     cv_text = "\n\n".join(
         f"## {s.heading}\n" + "\n".join(s.content_lines)
@@ -128,7 +129,7 @@ def generate_prep_summary(job_keywords: dict, sections: list[CVSection]) -> str:
         if s.heading != "__HEADER__"
     )
 
-    response = client.messages.create(
+    response = await client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=MAX_TOKENS,
         messages=[
@@ -164,3 +165,14 @@ Return markdown formatted text.""",
         ],
     )
     return response.content[0].text
+
+
+async def run_pipeline(
+    sections: list[CVSection], job_keywords: dict
+) -> tuple[dict[str, list[str]], str]:
+    """Run tailoring and prep summary in parallel."""
+    tailored, prep = await asyncio.gather(
+        tailor_cv_sections(sections, job_keywords),
+        generate_prep_summary(job_keywords, sections),
+    )
+    return tailored, prep
