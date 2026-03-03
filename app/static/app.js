@@ -91,11 +91,24 @@ form.addEventListener("submit", async (e) => {
         });
 
         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || "Something went wrong.");
+            let msg = "Something went wrong.";
+            try {
+                const err = await response.json();
+                msg = err.detail || msg;
+            } catch {
+                const text = await response.text();
+                msg = text.slice(0, 200) || msg;
+            }
+            throw new Error(msg);
         }
 
-        const data = await response.json();
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            throw new Error("Server returned invalid response: " + text.slice(0, 200));
+        }
         showResults(data);
     } catch (err) {
         showError(err.message);
