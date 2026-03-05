@@ -61,6 +61,66 @@
                 </div>
             </div>
 
+            <!-- Format Picker -->
+            <div class="bg-gray-900 rounded-xl p-6 border border-gray-800">
+                <h2 class="text-lg font-semibold text-white mb-4">CV Format</h2>
+                <div class="grid grid-cols-2 gap-3" id="format-picker">
+                    <button type="button" data-format="classic"
+                        class="format-card selected text-left p-4 rounded-lg border-2 transition">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="format-dot" style="background:#94a3b8"></span>
+                            <span class="font-semibold text-white text-sm">Classic</span>
+                        </div>
+                        <p class="text-gray-400 text-xs">Clean &amp; ATS-Friendly</p>
+                        <div class="format-preview mt-2">
+                            <div class="preview-name" style="font-family:Calibri,serif;font-size:11px;font-weight:bold">YOUR NAME</div>
+                            <div class="preview-heading" style="font-family:Calibri,serif;font-size:9px;font-weight:bold;text-transform:uppercase;border-bottom:1px solid #333;color:#000">EXPERIENCE</div>
+                            <div class="preview-body" style="font-family:Calibri,serif;font-size:8px">• Managed enterprise projects...</div>
+                        </div>
+                    </button>
+                    <button type="button" data-format="modern"
+                        class="format-card text-left p-4 rounded-lg border-2 transition">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="format-dot" style="background:#0070c0"></span>
+                            <span class="font-semibold text-white text-sm">Modern</span>
+                        </div>
+                        <p class="text-gray-400 text-xs">Bold Headers, Blue Accent</p>
+                        <div class="format-preview mt-2">
+                            <div class="preview-name" style="font-family:Arial,sans-serif;font-size:12px;font-weight:bold">Your Name</div>
+                            <div class="preview-heading" style="font-family:Arial,sans-serif;font-size:9px;font-weight:bold;color:#0070c0">Experience</div>
+                            <div class="preview-body" style="font-family:Arial,sans-serif;font-size:8px">• Managed enterprise projects...</div>
+                        </div>
+                    </button>
+                    <button type="button" data-format="executive"
+                        class="format-card text-left p-4 rounded-lg border-2 transition">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="format-dot" style="background:#1f497d"></span>
+                            <span class="font-semibold text-white text-sm">Executive</span>
+                        </div>
+                        <p class="text-gray-400 text-xs">Senior &amp; Director Level</p>
+                        <div class="format-preview mt-2">
+                            <div class="preview-name" style="font-family:Georgia,serif;font-size:11px;font-weight:bold">Your Name</div>
+                            <div class="preview-heading" style="font-family:Georgia,serif;font-size:9px;font-weight:bold;text-transform:uppercase;color:#1f497d;border-bottom:1px solid #1f497d">EXPERIENCE</div>
+                            <div class="preview-body" style="font-family:Georgia,serif;font-size:8px">• Managed enterprise projects...</div>
+                        </div>
+                    </button>
+                    <button type="button" data-format="minimal"
+                        class="format-card text-left p-4 rounded-lg border-2 transition">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="format-dot" style="background:#505050"></span>
+                            <span class="font-semibold text-white text-sm">Minimal</span>
+                        </div>
+                        <p class="text-gray-400 text-xs">Clean One-Page Focus</p>
+                        <div class="format-preview mt-2">
+                            <div class="preview-name" style="font-family:Arial,sans-serif;font-size:10px">Your Name</div>
+                            <div class="preview-heading" style="font-family:Arial,sans-serif;font-size:9px;font-weight:bold;color:#505050">Experience</div>
+                            <div class="preview-body" style="font-family:Arial,sans-serif;font-size:8px">• Managed enterprise projects...</div>
+                        </div>
+                    </button>
+                </div>
+                <input type="hidden" id="cv-format" value="classic">
+            </div>
+
             <!-- Submit -->
             <button type="submit" id="submit-btn"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed text-lg">
@@ -95,6 +155,7 @@
                     <div>
                         <h3 class="text-green-400 font-semibold text-lg">Tailored CV Ready</h3>
                         <p class="text-gray-400 text-sm mt-1">Your CV has been tailored with relevant keywords.</p>
+                        <p class="text-gray-500 text-xs mt-1">Format: <span id="result-format" class="text-gray-400 font-medium"></span></p>
                     </div>
                     <a id="download-link" href="#"
                         class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition inline-flex items-center gap-2">

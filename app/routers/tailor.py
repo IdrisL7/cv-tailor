@@ -14,6 +14,7 @@ from app.services.docx_handler import (
     save_docx,
     sections_to_text,
 )
+from app.services.formatter import apply_format, FORMATS
 from app.services.ai_engine import (
     extract_keywords,
     run_pipeline,
@@ -34,6 +35,7 @@ async def tailor_cv(
     cv_file: UploadFile = File(...),
     job_url: Optional[str] = Form(None),
     job_text: Optional[str] = Form(None),
+    cv_format: Optional[str] = Form(default="classic"),
 ):
     try:
         if not job_url and not job_text:
@@ -82,14 +84,20 @@ async def tailor_cv(
         tailored_sections, prep_summary = await run_pipeline(sections, job_keywords)
 
         # 4. Generate output file
+        # Normalise format key
+        fmt_key = cv_format if cv_format in FORMATS else "classic"
+
         if is_docx and doc:
             doc = apply_tailored_content(doc, sections, tailored_sections)
+            doc = apply_format(doc, fmt_key)
             output_filename = f"{session_id}_tailored.docx"
             save_docx(doc, OUTPUT_DIR / output_filename)
         else:
             # PDF input: generate a new DOCX with tailored content
             output_filename = f"{session_id}_tailored.docx"
-            _build_docx_from_sections(sections, tailored_sections, OUTPUT_DIR / output_filename)
+            doc = _build_docx_from_sections(sections, tailored_sections, OUTPUT_DIR / output_filename)
+            doc = apply_format(doc, fmt_key)
+            save_docx(doc, OUTPUT_DIR / output_filename)
 
         # 5. Keyword analysis
         cv_full_text = " ".join(" ".join(s.content_lines) for s in sections).lower()
@@ -104,6 +112,7 @@ async def tailor_cv(
             "keywords_missing": missing,
             "job_title": job_keywords.get("title", ""),
             "company": job_keywords.get("company", ""),
+            "cv_format": fmt_key,
         }
     except HTTPException:
         raise
@@ -133,7 +142,7 @@ def _build_docx_from_sections(
     sections: list,
     tailored_sections: dict[str, list[str]],
     output_path: Path,
-) -> None:
+):
     from docx import Document
     from docx.shared import Pt
 
@@ -160,4 +169,5 @@ def _build_docx_from_sections(
             for run in p.runs:
                 run.font.size = Pt(11)
 
-    doc.save(str(output_path))
+    # Return doc so format can be applied before saving
+    return doc

@@ -1,4 +1,15 @@
 const form = document.getElementById("tailor-form");
+const formatCards = document.querySelectorAll(".format-card");
+const cvFormatInput = document.getElementById("cv-format");
+
+// Format picker
+formatCards.forEach((card) => {
+    card.addEventListener("click", () => {
+        formatCards.forEach((c) => c.classList.remove("selected"));
+        card.classList.add("selected");
+        cvFormatInput.value = card.dataset.format;
+    });
+});
 const jobUrlInput = document.getElementById("job-url");
 const jobTextInput = document.getElementById("job-text");
 const cvFileInput = document.getElementById("cv-file");
@@ -80,6 +91,7 @@ form.addEventListener("submit", async (e) => {
     formData.append("cv_file", file);
     if (jobUrl) formData.append("job_url", jobUrl);
     if (jobText) formData.append("job_text", jobText);
+    formData.append("cv_format", cvFormatInput.value || "classic");
 
     showProgress("Analyzing job description and tailoring your CV...");
     submitBtn.disabled = true;
@@ -146,6 +158,11 @@ function showResults(data) {
     // Job info
     document.getElementById("result-title").textContent = data.job_title || "Unknown Role";
     document.getElementById("result-company").textContent = data.company ? `at ${data.company}` : "";
+
+    // Format label
+    const formatLabels = { classic: "Classic", modern: "Modern", executive: "Executive", minimal: "Minimal" };
+    const resultFormat = document.getElementById("result-format");
+    if (resultFormat) resultFormat.textContent = formatLabels[data.cv_format] || "Classic";
 
     // Download link
     const downloadLink = document.getElementById("download-link");

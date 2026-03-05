@@ -36,6 +36,54 @@
     border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+/* Format picker cards */
+.format-card {
+    background-color: rgb(31, 41, 55);
+    border-color: rgb(55, 65, 81);
+    cursor: pointer;
+}
+
+.format-card:hover {
+    border-color: rgb(75, 85, 99);
+    background-color: rgb(36, 48, 63);
+}
+
+.format-card.selected {
+    border-color: rgb(59, 130, 246);
+    background-color: rgba(59, 130, 246, 0.08);
+}
+
+.format-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.format-preview {
+    background: #fff;
+    border-radius: 4px;
+    padding: 6px 8px;
+    min-height: 52px;
+    line-height: 1.5;
+}
+
+.preview-name {
+    color: #111;
+    margin-bottom: 2px;
+}
+
+.preview-heading {
+    margin-top: 3px;
+    margin-bottom: 2px;
+    padding-bottom: 1px;
+}
+
+.preview-body {
+    color: #444;
+}
+
 /* Prose overrides for dark theme */
 .prose h2 {
     color: rgb(229, 231, 235);
