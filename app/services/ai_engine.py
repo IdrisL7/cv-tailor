@@ -167,12 +167,59 @@ Return markdown formatted text.""",
     return response.content[0].text
 
 
+async def generate_cover_letter(job_keywords: dict, sections: list[CVSection]) -> str:
+    client = _get_async_client()
+
+    # Pull candidate name from header section
+    candidate_name = ""
+    for s in sections:
+        if s.heading == "__HEADER__" and s.content_lines:
+            candidate_name = s.content_lines[0]
+            break
+
+    cv_text = "\n\n".join(
+        f"## {s.heading}\n" + "\n".join(s.content_lines)
+        for s in sections
+        if s.heading != "__HEADER__"
+    )
+
+    response = await client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=MAX_TOKENS,
+        messages=[
+            {
+                "role": "user",
+                "content": f"""Write a professional cover letter for this candidate applying to this role.
+
+RULES:
+1. Use ONLY experience and skills that genuinely appear in the CV — never fabricate.
+2. Directly connect the candidate's background to the specific role requirements.
+3. Keep it to 3–4 paragraphs: opening, 2 experience paragraphs, closing.
+4. Tone: confident, professional, concise. No clichés like 'I am writing to apply'.
+5. Address it 'Dear Hiring Manager,' — do not invent a name.
+6. Sign off with the candidate's name: {candidate_name or 'the candidate'}.
+7. Do NOT include placeholders like [Company Name] — use the actual company name from the job data.
+
+JOB DETAILS:
+{json.dumps(job_keywords, indent=2)}
+
+CANDIDATE CV:
+{cv_text}
+
+Return only the cover letter text, no extra commentary.""",
+            }
+        ],
+    )
+    return response.content[0].text
+
+
 async def run_pipeline(
     sections: list[CVSection], job_keywords: dict
-) -> tuple[dict[str, list[str]], str]:
-    """Run tailoring and prep summary in parallel."""
-    tailored, prep = await asyncio.gather(
+) -> tuple[dict[str, list[str]], str, str]:
+    """Run tailoring, prep summary, and cover letter in parallel."""
+    tailored, prep, cover = await asyncio.gather(
         tailor_cv_sections(sections, job_keywords),
         generate_prep_summary(job_keywords, sections),
+        generate_cover_letter(job_keywords, sections),
     )
-    return tailored, prep
+    return tailored, prep, cover

@@ -84,6 +84,61 @@
     color: #444;
 }
 
+/* ── ATS Score Ring ───────────────────────────────────────────────── */
+.ats-ring-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: inline-block;
+}
+
+.ats-ring {
+    width: 80px;
+    height: 80px;
+    transform: rotate(-90deg);
+}
+
+.ats-ring-bg {
+    fill: none;
+    stroke: rgb(55, 65, 81);
+    stroke-width: 7;
+}
+
+.ats-ring-fill {
+    fill: none;
+    stroke: #22c55e;
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-dasharray: 201;
+    stroke-dashoffset: 201;
+    transition: stroke-dashoffset 0.05s linear;
+}
+
+.ats-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+}
+
+.ats-score-number {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #22c55e;
+}
+
+.ats-score-pct {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: rgb(156, 163, 175);
+    margin-top: 4px;
+    align-self: flex-end;
+    margin-left: 1px;
+}
+
 /* Prose overrides for dark theme */
 .prose h2 {
     color: rgb(229, 231, 235);

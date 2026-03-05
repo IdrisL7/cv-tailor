@@ -15,6 +15,7 @@ from app.services.docx_handler import (
     sections_to_text,
 )
 from app.services.formatter import apply_format, FORMATS
+from app.services.pdf_generator import generate_pdf
 from app.services.ai_engine import (
     extract_keywords,
     run_pipeline,
@@ -79,9 +80,9 @@ async def tailor_cv(
             sections = extract_sections_from_pdf(input_path)
             doc = None
 
-        # 3. AI pipeline (keyword extraction first, then tailor + prep in parallel)
+        # 3. AI pipeline (keyword extraction first, then tailor + prep + cover in parallel)
         job_keywords = await extract_keywords(jd_text)
-        tailored_sections, prep_summary = await run_pipeline(sections, job_keywords)
+        tailored_sections, prep_summary, cover_letter = await run_pipeline(sections, job_keywords)
 
         # 4. Generate output file
         # Normalise format key
@@ -99,17 +100,44 @@ async def tailor_cv(
             doc = apply_format(doc, fmt_key)
             save_docx(doc, OUTPUT_DIR / output_filename)
 
-        # 5. Keyword analysis
-        cv_full_text = " ".join(" ".join(s.content_lines) for s in sections).lower()
+        # 5. Keyword analysis & ATS score
+        # Check against the TAILORED content for the score
+        tailored_cv_text = " ".join(
+            " ".join(tailored_sections.get(s.heading, s.content_lines))
+            for s in sections
+        ).lower()
+        original_cv_text = " ".join(" ".join(s.content_lines) for s in sections).lower()
+
         all_keywords = job_keywords.get("keywords", [])
-        matched = [k for k in all_keywords if k.lower() in cv_full_text]
-        missing = [k for k in all_keywords if k.lower() not in cv_full_text]
+        matched = [k for k in all_keywords if k.lower() in tailored_cv_text]
+        missing = [k for k in all_keywords if k.lower() not in tailored_cv_text]
+
+        # ATS score: check keywords + hard_skills + tools against tailored CV
+        ats_terms = list(set(
+            all_keywords
+            + job_keywords.get("hard_skills", [])
+            + job_keywords.get("tools", [])
+        ))
+        ats_matched = [t for t in ats_terms if t.lower() in tailored_cv_text]
+        ats_score = round(len(ats_matched) / max(len(ats_terms), 1) * 100)
+
+        # 6. Generate PDF version
+        pdf_filename = f"{session_id}_tailored.pdf"
+        generate_pdf(
+            sections,
+            tailored_sections,
+            OUTPUT_DIR / pdf_filename,
+            format_key=fmt_key,
+        )
 
         return {
             "tailored_cv_filename": output_filename,
+            "pdf_filename": pdf_filename,
             "prep_summary": prep_summary,
+            "cover_letter": cover_letter,
             "keywords_matched": matched,
             "keywords_missing": missing,
+            "ats_score": ats_score,
             "job_title": job_keywords.get("title", ""),
             "company": job_keywords.get("company", ""),
             "cv_format": fmt_key,
@@ -131,10 +159,14 @@ async def download_file(filename: str):
     file_path = OUTPUT_DIR / filename
     if not file_path.exists():
         raise HTTPException(404, "File not found")
+    if filename.endswith(".pdf"):
+        media_type = "application/pdf"
+    else:
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     return FileResponse(
         path=str(file_path),
         filename=filename,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        media_type=media_type,
     )
 
 
